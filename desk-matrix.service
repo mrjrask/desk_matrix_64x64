@@ -1,0 +1,16 @@
+[Unit]
+Description=Desk Matrix 64x64 Date and Weather Display
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/pi/desk_matrix_64x64
+ExecStart=/usr/bin/sudo -E env PATH=/home/pi/desk_matrix_64x64/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin /home/pi/desk_matrix_64x64/venv/bin/python /home/pi/desk_matrix_64x64/main.py
+Restart=always
+RestartSec=5
+User=pi
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

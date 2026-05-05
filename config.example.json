@@ -1,0 +1,39 @@
+{
+  "matrix": {
+    "rows": 64,
+    "cols": 64,
+    "chain_length": 1,
+    "parallel": 1,
+    "hardware_mapping": "adafruit-hat",
+    "gpio_slowdown": 4,
+    "brightness": 65,
+    "pwm_bits": 11,
+    "limit_refresh_rate_hz": 120,
+    "rgb_sequence": "RGB"
+  },
+  "location": {
+    "name": "Northbrook",
+    "latitude": 42.1275,
+    "longitude": -87.8289,
+    "timezone": "America/Chicago"
+  },
+  "weather": {
+    "units": "fahrenheit",
+    "refresh_minutes": 15
+  },
+  "screens": {
+    "date_seconds": 10,
+    "weather_seconds": 12
+  },
+  "style": {
+    "font_regular": "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    "font_bold": "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+    "background": [0, 0, 0],
+    "white": [235, 235, 235],
+    "muted": [130, 130, 130],
+    "blue": [60, 150, 255],
+    "yellow": [255, 205, 55],
+    "orange": [255, 145, 45],
+    "red": [255, 70, 70]
+  }
+}
