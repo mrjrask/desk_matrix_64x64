@@ -38,6 +38,7 @@ except ImportError as exc:
 
 BASE_DIR = Path(__file__).resolve().parent
 CONFIG_PATH = BASE_DIR / "config.json"
+ICON_DIR = BASE_DIR / "images" / "WeatherKit"
 
 Color = Tuple[int, int, int]
 
@@ -263,6 +264,60 @@ def draw_weather_icon(draw: ImageDraw.ImageDraw, code: Optional[int], colors: Di
         draw_cloud(draw, 21, 15, muted, white)
 
 
+def weather_icon_name(code: Optional[int], is_night: bool) -> str:
+    suffix = "_night" if is_night else ""
+    if code in (0,):
+        return f"clear{suffix}"
+    if code in (1,):
+        return f"mostlyClear{suffix}"
+    if code in (2,):
+        return f"partlyCloudy{suffix}"
+    if code in (3,):
+        return f"cloudy{suffix}"
+    if code in (45, 48):
+        return f"foggy{suffix}"
+    if code in (51, 53, 55):
+        return f"drizzle{suffix}"
+    if code in (56, 57):
+        return f"freezingDrizzle{suffix}"
+    if code in (61, 63):
+        return f"rain{suffix}"
+    if code in (65, 82):
+        return f"heavyRain{suffix}"
+    if code in (66, 67):
+        return f"freezingRain{suffix}"
+    if code in (71, 73, 77):
+        return f"snow{suffix}"
+    if code in (75,):
+        return f"heavySnow{suffix}"
+    if code in (80, 81):
+        return f"sunShowers{suffix}"
+    if code in (85, 86):
+        return f"sunFlurries{suffix}"
+    if code in (95, 96, 99):
+        return f"thunderstorms{suffix}"
+    return f"cloudy{suffix}"
+
+
+def paste_weather_icon(image: Image.Image, code: Optional[int], tz_name: str) -> bool:
+    try:
+        now = datetime.now(tz=ZoneInfo(tz_name))
+    except Exception:
+        now = datetime.now(tz=ZoneInfo("UTC"))
+    is_night = now.hour < 6 or now.hour >= 18
+    icon_name = weather_icon_name(code, is_night)
+    icon_path = ICON_DIR / f"{icon_name}.png"
+    if not icon_path.exists():
+        fallback = ICON_DIR / "cloudy.png"
+        if not fallback.exists():
+            return False
+        icon_path = fallback
+    with Image.open(icon_path) as source:
+        icon = source.convert("RGBA").resize((32, 32), Image.Resampling.LANCZOS)
+    image.alpha_composite(icon, dest=(16, 13))
+    return True
+
+
 def render_date_screen(config: Dict[str, Any]) -> Image.Image:
     style = config["style"]
     loc = config["location"]
@@ -297,6 +352,7 @@ def render_date_screen(config: Dict[str, Any]) -> Image.Image:
 
 def render_weather_screen(config: Dict[str, Any], weather: WeatherData) -> Image.Image:
     style = config["style"]
+    loc = config["location"]
     unit_symbol = "F" if config.get("weather", {}).get("units", "fahrenheit") == "fahrenheit" else "C"
 
     colors = {
@@ -311,7 +367,7 @@ def render_weather_screen(config: Dict[str, Any], weather: WeatherData) -> Image
     font_regular = style.get("font_regular", "")
     font_bold = style.get("font_bold", "")
 
-    image = Image.new("RGB", (64, 64), colors["background"])
+    image = Image.new("RGBA", (64, 64), colors["background"] + (255,))
     draw = ImageDraw.Draw(image)
 
     temp_font = load_font(font_bold, 23, fallback_bold=True)
@@ -320,12 +376,14 @@ def render_weather_screen(config: Dict[str, Any], weather: WeatherData) -> Image
     small_font = load_font(font_regular, 7)
 
     if weather.temp is None:
-        draw_weather_icon(draw, None, colors)
+        if not paste_weather_icon(image, None, loc.get("timezone", "UTC")):
+            draw_weather_icon(draw, None, colors)
         center_text(draw, 2, "WEATHER", load_font(font_bold, 9, True), colors["blue"])
         center_text(draw, 48, "No data", label_font, colors["muted"])
-        return image
+        return image.convert("RGB")
 
-    draw_weather_icon(draw, weather.code, colors)
+    if not paste_weather_icon(image, weather.code, loc.get("timezone", "UTC")):
+        draw_weather_icon(draw, weather.code, colors)
 
     temp_text = str(weather.temp)
     draw.text((2, 8), temp_text, font=temp_font, fill=colors["white"])
@@ -349,7 +407,7 @@ def render_weather_screen(config: Dict[str, Any], weather: WeatherData) -> Image
         age = fetched.strftime("%-I:%M")
         draw.text((43, 56), age, font=small_font, fill=colors["muted"])
 
-    return image
+    return image.convert("RGB")
 
 
 class MatrixApp:
