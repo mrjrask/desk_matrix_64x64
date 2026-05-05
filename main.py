@@ -367,7 +367,7 @@ def render_weather_screen(config: Dict[str, Any], weather: WeatherData) -> Image
     font_regular = style.get("font_regular", "")
     font_bold = style.get("font_bold", "")
 
-    image = Image.new("RGA", (64, 64), colors["background"] + (255,))
+    image = Image.new("RGBA", (64, 64), colors["background"] + (255,))
     draw = ImageDraw.Draw(image)
 
     temp_font = load_font(font_bold, 23, fallback_bold=True)
@@ -377,7 +377,7 @@ def render_weather_screen(config: Dict[str, Any], weather: WeatherData) -> Image
 
     if weather.temp is None:
         if not paste_weather_icon(image, None, loc.get("timezone", "UTC")):
-          draw_weather_icon(draw, None, colors)
+            draw_weather_icon(draw, None, colors)
         center_text(draw, 2, "WEATHER", load_font(font_bold, 9, True), colors["blue"])
         center_text(draw, 48, "No data", label_font, colors["muted"])
         return image.convert("RGB")
@@ -407,7 +407,7 @@ def render_weather_screen(config: Dict[str, Any], weather: WeatherData) -> Image
         age = fetched.strftime("%-I:%M")
         draw.text((43, 56), age, font=small_font, fill=colors["muted"])
 
-    return image
+    return image.convert("RGB")
 
 
 class MatrixApp:
